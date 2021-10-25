@@ -3,12 +3,20 @@ use serenity::framework::StandardFramework;
 use songbird::{Config, SerenityInit, EventContext, Event, EventHandler as VoiceEventHandler, CoreEvent};
 use songbird::driver::DecodeMode;
 use serenity::{Client, async_trait};
-use serenity::prelude::{EventHandler, Context};
+use serenity::prelude::{EventHandler, Context, TypeMapKey};
 use serenity::model::prelude::{Ready, GuildId, Message};
 use serenity::framework::standard::{Args, CommandResult};
 use serenity::framework::standard::macros::{group, command};
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
 mod bot;
+
+struct ReceiverMap;
+
+impl TypeMapKey for ReceiverMap {
+    type Value = Arc<Mutex<HashMap<GuildId, Receiver>>>;
+}
 
 struct Handler;
 
@@ -19,6 +27,7 @@ impl EventHandler for Handler {
     }
 }
 
+#[derive(Clone)]
 struct Receiver {
     guild_id: GuildId
 }
@@ -68,6 +77,11 @@ async fn main() {
         .await
         .expect("Err creating client");
 
+    {
+        let mut data = client.data.write().await;
+        data.insert::<ReceiverMap>(Arc::new(Mutex::new(HashMap::new())));
+    }
+
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
@@ -88,34 +102,41 @@ async fn join(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 // NOTE: this skips listening for the actual connection result.
                 let mut handler = handler_lock.lock().await;
 
+                let receiver_map = {
+                    let data = ctx.data.read().await;
+                    data.get::<ReceiverMap>().unwrap().clone()
+                };
+                let mut receiver_guard = receiver_map.lock().unwrap();
+                let receiver = receiver_guard.entry(msg.guild_id.unwrap()).or_insert_with(|| Receiver::new(msg.guild_id.unwrap()));
+
                 handler.add_global_event(
                     CoreEvent::SpeakingStateUpdate.into(),
-                    Receiver::new(msg.guild_id.unwrap())
+                    receiver.clone()
                 );
 
                 handler.add_global_event(
                     CoreEvent::SpeakingUpdate.into(),
-                    Receiver::new(msg.guild_id.unwrap())
+                    receiver.clone()
                 );
 
                 handler.add_global_event(
                     CoreEvent::VoicePacket.into(),
-                    Receiver::new(msg.guild_id.unwrap())
+                    receiver.clone()
                 );
 
                 handler.add_global_event(
                     CoreEvent::RtcpPacket.into(),
-                    Receiver::new(msg.guild_id.unwrap())
+                    receiver.clone()
                 );
 
                 handler.add_global_event(
                     CoreEvent::ClientConnect.into(),
-                    Receiver::new(msg.guild_id.unwrap())
+                    receiver.clone()
                 );
 
                 handler.add_global_event(
                     CoreEvent::ClientDisconnect.into(),
-                    Receiver::new(msg.guild_id.unwrap())
+                    receiver.clone()
                 );
             }
         }
