@@ -160,8 +160,15 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
     if has_handler {
         if let Err(e) = manager.remove(guild_id).await {
             let _ = msg.channel_id.say(&ctx.http, format!("Failed: {:?}", e)).await;
+            return Ok(());
+        } else {
+            let receiver_map = {
+                let data = ctx.data.read().await;
+                data.get::<ReceiverMap>().unwrap().clone()
+            };
+            let mut receiver_guard = receiver_map.lock().unwrap();
+            let _ = receiver_guard.remove(&msg.guild_id.unwrap()).unwrap();
         }
-
         let _ = msg.channel_id.say(&ctx.http,"Left voice channel").await;
     } else {
         let _ = msg.reply(ctx, "Not in a voice channel").await;
