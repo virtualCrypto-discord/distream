@@ -10,8 +10,6 @@ use serenity::framework::standard::macros::{group, command};
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
-mod bot;
-
 struct ReceiverMap;
 
 impl TypeMapKey for ReceiverMap {
@@ -106,38 +104,42 @@ async fn join(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                     let data = ctx.data.read().await;
                     data.get::<ReceiverMap>().unwrap().clone()
                 };
-                let mut receiver_guard = receiver_map.lock().unwrap();
-                let receiver = receiver_guard.entry(msg.guild_id.unwrap()).or_insert_with(|| Receiver::new(msg.guild_id.unwrap()));
+                {
+                    let mut receiver_guard = receiver_map.lock().unwrap();
+                    let receiver = receiver_guard.entry(msg.guild_id.unwrap()).or_insert_with(|| Receiver::new(msg.guild_id.unwrap()));
 
-                handler.add_global_event(
-                    CoreEvent::SpeakingStateUpdate.into(),
-                    receiver.clone()
-                );
+                    handler.add_global_event(
+                        CoreEvent::SpeakingStateUpdate.into(),
+                        receiver.clone()
+                    );
 
-                handler.add_global_event(
-                    CoreEvent::SpeakingUpdate.into(),
-                    receiver.clone()
-                );
+                    handler.add_global_event(
+                        CoreEvent::SpeakingUpdate.into(),
+                        receiver.clone()
+                    );
 
-                handler.add_global_event(
-                    CoreEvent::VoicePacket.into(),
-                    receiver.clone()
-                );
+                    handler.add_global_event(
+                        CoreEvent::VoicePacket.into(),
+                        receiver.clone()
+                    );
 
-                handler.add_global_event(
-                    CoreEvent::RtcpPacket.into(),
-                    receiver.clone()
-                );
+                    handler.add_global_event(
+                        CoreEvent::RtcpPacket.into(),
+                        receiver.clone()
+                    );
 
-                handler.add_global_event(
-                    CoreEvent::ClientConnect.into(),
-                    receiver.clone()
-                );
+                    handler.add_global_event(
+                        CoreEvent::ClientConnect.into(),
+                        receiver.clone()
+                    );
 
-                handler.add_global_event(
-                    CoreEvent::ClientDisconnect.into(),
-                    receiver.clone()
-                );
+                    handler.add_global_event(
+                        CoreEvent::ClientDisconnect.into(),
+                        receiver.clone()
+                    );
+                }
+
+                let _ = msg.channel_id.say(&ctx.http, "Connected voice channel").await;
             }
         }
         None => {
