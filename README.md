@@ -12,6 +12,16 @@ distreamは長時間の音声録音Botで、2時間以上の録音が可能で�
 
 recorded voice is saved on file system.
 
+### how to host
+
+You need to install Rust.
+
+```bash
+$ git clone https://github.com/virtualCrypto-discord/distream.git
+$ cd distream
+$ DISCORD_BOT_TOKEN=<your bot token here> cargo run
+```
+
 ### contributors
 
 [sizumita](https://github.com/sizumita) \
