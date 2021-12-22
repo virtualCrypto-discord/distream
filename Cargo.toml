@@ -21,3 +21,6 @@ features = ["macros", "rt-multi-thread"]
 
 [dependencies.songbird]
 version = "0.2.0"
+
+[dependencies.drap]
+path = "./drap"

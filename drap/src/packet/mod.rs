@@ -3,10 +3,12 @@ pub mod encoder;
 
 use std::convert::TryInto;
 
+// 2^13-1
 const MAX_PACKET_DATA_SIZE: usize = 0x1FFF;
-//2^13-1
+
+// size 13bit + type 3bit
 const HEADER_SIZE: usize = 2;
-//size 13bit + type 3bit
+
 const MAX_PACKET_SIZE: usize = HEADER_SIZE + MAX_PACKET_DATA_SIZE;
 
 #[derive(Debug, PartialEq, Eq)]

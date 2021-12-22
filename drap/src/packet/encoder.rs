@@ -1,5 +1,7 @@
 use crate::packet::{AudioDataFormat, construct_header, construct_packet, HEADER_SIZE};
 
+/// # encode
+/// encode audio data packet to DRAP.
 pub fn encode(packet: &AudioDataFormat) -> Option<Vec<u8>> {
     match packet {
         AudioDataFormat::SpeakingStart(ss) =>
