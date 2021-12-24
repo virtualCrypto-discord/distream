@@ -274,6 +274,7 @@ dependencies = [
 name = "distream"
 version = "0.1.0"
 dependencies = [
+ "drap",
  "serenity",
  "songbird",
  "tokio",
@@ -281,6 +282,10 @@ dependencies = [
  "tracing-futures",
  "tracing-subscriber",
 ]
+
+[[package]]
+name = "drap"
+version = "0.1.0"
 
 [[package]]
 name = "encoding_rs"
